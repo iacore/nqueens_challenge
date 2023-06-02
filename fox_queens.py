@@ -1,3 +1,5 @@
+"""By https://github.com/slavfox"""
+
 from z3 import *
 import time
 
