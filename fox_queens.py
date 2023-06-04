@@ -6,28 +6,30 @@ import time
 
 def queens_fox(n):
     start = time.perf_counter()
-    sol = Then("simplify", "solve-eqs", "bit-blast", "smt").solver()
 
-    squares = [Bool(f"{i}") for i in range(n * n)]
+    sol = Solver()
+    # sol = Repeat(Then("simplify", "solve-eqs", "bit-blast", "smt")).solver()
+
+    squares = BoolVector('', n * n)
+
+    sol.add(PbEq([(v, 1) for v in squares], n))
 
     # Each row has exactly one queen
     for row in range(n):
         row_squares = [squares[row * n + col] for col in range(n)]
-        sol.add(AtMost(*row_squares, 1))
-        sol.add(AtLeast(*row_squares, 1))
+        sol.add(PbEq([(v, 1) for v in row_squares], 1))
 
     # Each column has exactly one queen
     for col in range(n):
         col_squares = [squares[row * n + col] for row in range(n)]
-        sol.add(AtMost(*col_squares, 1))
-        sol.add(AtLeast(*col_squares, 1))
+        sol.add(PbEq([(v, 1) for v in col_squares], 1))
 
     # Each diagonal has at most one queen
     for diag in range(2 * n - 1):
         sol.add(
-            AtMost(
-                *[
-                    squares[row * n + col]
+            PbLe(
+                [
+                    (squares[row * n + col], 1)
                     for row in range(n)
                     for col in range(n)
                     if row + col == diag
@@ -35,11 +37,12 @@ def queens_fox(n):
                 1,
             )
         )
+
     for diag in range(-n + 1, n):
         sol.add(
-            AtMost(
-                *[
-                    squares[row * n + col]
+            PbLe(
+                [
+                    (squares[row * n + col], 1)
                     for row in range(n)
                     for col in range(n)
                     if row - col == diag
